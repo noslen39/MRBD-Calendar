@@ -15,6 +15,8 @@ const addBtn = document.getElementById("addBtn");
 const deleteBtn = document.getElementById("deleteBtn");
 
 const storageKey = "rayban-calendar-events-v2";
+const appStateKey = "rayban-calendar-ui-state-v1";
+const maxVisibleCells = 35;
 const eventTypes = ["work", "personal", "important", "urgent"];
 
 const today = new Date();
@@ -23,16 +25,28 @@ today.setHours(0, 0, 0, 0);
 const startDate = new Date(today.getFullYear(), today.getMonth(), 1);
 const endDate = new Date(today.getFullYear() + 10, today.getMonth(), 1);
 
-const state = {
-  screen: "calendar",
-  visibleYear: today.getFullYear(),
-  visibleMonth: today.getMonth(),
-  selectedDate: new Date(today),
-  focusArea: "grid",
-  selectedCellIndex: 0,
-  events: loadEvents(),
-  addIndex: 0
-};
+function loadUiState() {
+  const raw = localStorage.getItem(appStateKey);
+
+  if (!raw) return {};
+
+  try {
+    return JSON.parse(raw);
+  } catch {
+    return {};
+  }
+}
+
+function saveUiState() {
+  const uiState = {
+    visibleYear: state.visibleYear,
+    visibleMonth: state.visibleMonth,
+    selectedDate: toDateKey(state.selectedDate),
+    selectedCellIndex: state.selectedCellIndex
+  };
+
+  localStorage.setItem(appStateKey, JSON.stringify(uiState));
+}
 
 function loadEvents() {
   const raw = localStorage.getItem(storageKey);
@@ -49,6 +63,19 @@ function loadEvents() {
 function saveEvents() {
   localStorage.setItem(storageKey, JSON.stringify(state.events));
 }
+
+const savedUiState = loadUiState();
+
+const state = {
+  screen: "calendar",
+  visibleYear: savedUiState.visibleYear ?? today.getFullYear(),
+  visibleMonth: savedUiState.visibleMonth ?? today.getMonth(),
+  selectedDate: savedUiState.selectedDate ? new Date(savedUiState.selectedDate) : new Date(today),
+  focusArea: "grid",
+  selectedCellIndex: savedUiState.selectedCellIndex ?? 0,
+  events: loadEvents(),
+  addIndex: 0
+};
 
 function toDateKey(date) {
   const year = date.getFullYear();
@@ -114,13 +141,16 @@ function getPrimaryEventType(date) {
 }
 
 function render() {
-  if (state.screen === "calendar") {
-    renderCalendarScreen();
-  }
+  requestAnimationFrame(() => {
+    if (state.screen === "calendar") {
+      renderCalendarScreen();
+      saveUiState();
+    }
 
-  if (state.screen === "add") {
-    renderAddScreen();
-  }
+    if (state.screen === "add") {
+      renderAddScreen();
+    }
+  });
 }
 
 function renderCalendarScreen() {
@@ -134,7 +164,11 @@ function renderCalendarScreen() {
 
   calendarGrid.innerHTML = "";
 
-  const cells = getMonthCells(state.visibleYear, state.visibleMonth);
+  const cells = getMonthCells(state.visibleYear, state.visibleMonth).slice(0, maxVisibleCells);
+
+  if (state.selectedCellIndex >= cells.length) {
+    state.selectedCellIndex = cells.length - 1;
+  }
 
   cells.forEach((date, index) => {
     const button = document.createElement("button");
@@ -148,6 +182,8 @@ function renderCalendarScreen() {
 
     if (date.getMonth() !== state.visibleMonth) {
       button.classList.add("outside");
+      button.setAttribute("aria-hidden", "true");
+      button.tabIndex = -1;
     }
 
     if (isSameDay(date, today)) {
@@ -255,7 +291,7 @@ function moveMonth(amount) {
   state.selectedDate = new Date(state.visibleYear, state.visibleMonth, 1);
   state.focusArea = "grid";
 
-  const cells = getMonthCells(state.visibleYear, state.visibleMonth);
+  const cells = getMonthCells(state.visibleYear, state.visibleMonth).slice(0, maxVisibleCells);
   state.selectedCellIndex = cells.findIndex((date) =>
     date.getMonth() === state.visibleMonth && date.getDate() === 1
   );
@@ -378,7 +414,7 @@ function moveGrid(direction) {
   }
 
   if (direction === "down") {
-    if (state.selectedCellIndex >= 35) {
+    if (state.selectedCellIndex >= maxVisibleCells - 7) {
       state.focusArea = "actions";
       state.selectedCellIndex = 0;
       updateSelectionStyles();
@@ -388,16 +424,20 @@ function moveGrid(direction) {
     state.selectedCellIndex += 7;
   }
 
-  const cells = getMonthCells(state.visibleYear, state.visibleMonth);
+  const cells = getMonthCells(state.visibleYear, state.visibleMonth).slice(0, maxVisibleCells);
   state.selectedDate = new Date(cells[state.selectedCellIndex]);
 
   if (state.selectedDate.getMonth() !== state.visibleMonth) {
     state.visibleYear = state.selectedDate.getFullYear();
     state.visibleMonth = state.selectedDate.getMonth();
 
-    state.selectedCellIndex = getMonthCells(state.visibleYear, state.visibleMonth).findIndex((date) =>
-      isSameDay(date, state.selectedDate)
-    );
+    state.selectedCellIndex = getMonthCells(state.visibleYear, state.visibleMonth)
+      .slice(0, maxVisibleCells)
+      .findIndex((date) => isSameDay(date, state.selectedDate));
+
+    if (state.selectedCellIndex < 0) {
+      state.selectedCellIndex = 0;
+    }
 
     render();
     return;
@@ -435,7 +475,7 @@ function moveActions(direction) {
 
   if (direction === "up") {
     state.focusArea = "grid";
-    state.selectedCellIndex = 35;
+    state.selectedCellIndex = maxVisibleCells - 7;
   }
 
   updateSelectionStyles();
@@ -485,6 +525,10 @@ document.querySelectorAll(".preset-btn").forEach((button, index) => {
 });
 
 document.addEventListener("keydown", (event) => {
+  if (["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown"].includes(event.key)) {
+    event.preventDefault();
+  }
+
   if (event.key === "ArrowLeft") handleMove("left");
   if (event.key === "ArrowRight") handleMove("right");
   if (event.key === "ArrowUp") handleMove("up");
