@@ -17,6 +17,8 @@ const deleteBtn = document.getElementById("deleteBtn");
 const storageKey = "rayban-calendar-events-v2";
 const appStateKey = "rayban-calendar-ui-state-v1";
 const maxVisibleCells = 35;
+const moveRepeatDelay = 115;
+const selectCooldownDelay = 220;
 const eventTypes = ["work", "personal", "important", "urgent"];
 
 const today = new Date();
@@ -74,7 +76,10 @@ const state = {
   focusArea: "grid",
   selectedCellIndex: savedUiState.selectedCellIndex ?? 0,
   events: loadEvents(),
-  addIndex: 0
+  addIndex: 0,
+  renderQueued: false,
+  lastMoveAt: 0,
+  lastSelectAt: 0
 };
 
 function toDateKey(date) {
@@ -141,7 +146,13 @@ function getPrimaryEventType(date) {
 }
 
 function render() {
+  if (state.renderQueued) return;
+
+  state.renderQueued = true;
+
   requestAnimationFrame(() => {
+    state.renderQueued = false;
+
     if (state.screen === "calendar") {
       renderCalendarScreen();
       saveUiState();
@@ -151,6 +162,28 @@ function render() {
       renderAddScreen();
     }
   });
+}
+
+function canMoveNow() {
+  const now = performance.now();
+
+  if (now - state.lastMoveAt < moveRepeatDelay) {
+    return false;
+  }
+
+  state.lastMoveAt = now;
+  return true;
+}
+
+function canSelectNow() {
+  const now = performance.now();
+
+  if (now - state.lastSelectAt < selectCooldownDelay) {
+    return false;
+  }
+
+  state.lastSelectAt = now;
+  return true;
 }
 
 function renderCalendarScreen() {
@@ -206,7 +239,7 @@ function renderCalendarScreen() {
       state.focusArea = "grid";
       state.selectedCellIndex = index;
       render();
-    });
+    }, { passive: true });
 
     calendarGrid.appendChild(button);
   });
@@ -225,6 +258,11 @@ function renderAddScreen() {
 
   presetButtons.forEach((button, index) => {
     button.classList.toggle("selected", index === state.addIndex);
+  });
+
+  presetButtons[state.addIndex]?.scrollIntoView({
+    block: "nearest",
+    inline: "nearest"
   });
 }
 
@@ -360,6 +398,8 @@ function deleteLatestEvent() {
 }
 
 function selectCurrent() {
+  if (!canSelectNow()) return;
+
   if (state.screen === "add") {
     const presetButtons = Array.from(document.querySelectorAll(".preset-btn"));
     const selected = presetButtons[state.addIndex];
@@ -376,8 +416,10 @@ function selectCurrent() {
   }
 
   if (state.focusArea === "grid") {
-    const cells = getMonthCells(state.visibleYear, state.visibleMonth);
+    const cells = getMonthCells(state.visibleYear, state.visibleMonth).slice(0, maxVisibleCells);
     const date = cells[state.selectedCellIndex];
+
+    if (!date) return;
 
     state.selectedDate = new Date(date);
     state.visibleYear = state.selectedDate.getFullYear();
@@ -501,6 +543,8 @@ function moveAddScreen(direction) {
 }
 
 function handleMove(direction) {
+  if (!canMoveNow()) return;
+
   if (state.screen === "add") {
     moveAddScreen(direction);
     return;
@@ -511,37 +555,43 @@ function handleMove(direction) {
   if (state.focusArea === "actions") moveActions(direction);
 }
 
-prevBtn.addEventListener("click", () => moveMonth(-1));
-todayBtn.addEventListener("click", goToToday);
-nextBtn.addEventListener("click", () => moveMonth(1));
-addBtn.addEventListener("click", openAddScreen);
-deleteBtn.addEventListener("click", deleteLatestEvent);
+prevBtn.addEventListener("click", () => moveMonth(-1), { passive: true });
+todayBtn.addEventListener("click", goToToday, { passive: true });
+nextBtn.addEventListener("click", () => moveMonth(1), { passive: true });
+addBtn.addEventListener("click", openAddScreen, { passive: true });
+deleteBtn.addEventListener("click", deleteLatestEvent, { passive: true });
 
 document.querySelectorAll(".preset-btn").forEach((button, index) => {
   button.addEventListener("click", () => {
     state.addIndex = index;
     addPresetEvent(button.dataset.title, button.dataset.type);
-  });
+  }, { passive: true });
 });
 
 document.addEventListener("keydown", (event) => {
-  if (["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown"].includes(event.key)) {
-    event.preventDefault();
-  }
+  const keyMap = {
+    ArrowLeft: "left",
+    ArrowRight: "right",
+    ArrowUp: "up",
+    ArrowDown: "down"
+  };
 
-  if (event.key === "ArrowLeft") handleMove("left");
-  if (event.key === "ArrowRight") handleMove("right");
-  if (event.key === "ArrowUp") handleMove("up");
-  if (event.key === "ArrowDown") handleMove("down");
+  if (keyMap[event.key]) {
+    event.preventDefault();
+    handleMove(keyMap[event.key]);
+    return;
+  }
 
   if (event.key === "Enter" || event.key === " ") {
     event.preventDefault();
     selectCurrent();
+    return;
   }
 
-  if (event.key === "Escape") {
+  if (event.key === "Escape" && state.screen === "add") {
+    event.preventDefault();
     closeAddScreen();
   }
-});
+}, { passive: false });
 
 render();
