@@ -3,25 +3,28 @@
 }
 
 :root {
-  --bg: #02040a;
-  --panel: #0c1220;
-  --panel-soft: #121a2b;
+  --bg: #020617;
+  --panel: #07111f;
+  --panel-soft: #0f1b2e;
+  --panel-glass: rgba(15, 27, 46, 0.82);
 
   --text: #ffffff;
-  --muted: #c3ccda;
+  --muted: #c9d4e5;
 
-  --focus-bg: #00e5ff;
-  --focus-text: #001018;
+  --focus-bg: #7dd3fc;
+  --focus-text: #03111f;
 
-  --today: #ffd60a;
-  --today-glow: rgba(255, 214, 10, 0.82);
+  --today: #facc15;
+  --today-glow: rgba(250, 204, 21, 0.9);
 
-  --work: #4f8cff;
-  --personal: #32d583;
-  --important: #ff9f1c;
-  --urgent: #ff4d6d;
+  --work: #60a5fa;
+  --personal: #34d399;
+  --important: #fb923c;
+  --urgent: #fb7185;
 
-  --border: rgba(255, 255, 255, 0.38);
+  --border: rgba(255, 255, 255, 0.42);
+  --soft-border: rgba(255, 255, 255, 0.18);
+  --shadow: rgba(0, 0, 0, 0.52);
 }
 
 html,
@@ -52,9 +55,10 @@ body {
   max-height: 600px;
   overflow: hidden;
   background:
-    radial-gradient(circle at 18% 2%, rgba(0, 229, 255, 0.28), transparent 25%),
-    radial-gradient(circle at 96% 92%, rgba(255, 214, 10, 0.18), transparent 31%),
-    linear-gradient(135deg, #02040a 0%, #07101e 100%);
+    radial-gradient(circle at 12% 6%, rgba(125, 211, 252, 0.38), transparent 24%),
+    radial-gradient(circle at 88% 0%, rgba(52, 211, 153, 0.18), transparent 25%),
+    radial-gradient(circle at 92% 92%, rgba(250, 204, 21, 0.22), transparent 30%),
+    linear-gradient(145deg, #020617 0%, #07111f 46%, #0b1020 100%);
 }
 
 .app-screen {
@@ -70,7 +74,7 @@ body {
 .app-screen.active {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 7px;
 }
 
 /* ---------- Header ---------- */
@@ -78,22 +82,30 @@ body {
 .top {
   text-align: center;
   flex: 0 0 auto;
+  padding: 4px 8px 5px;
+  border: 1px solid var(--soft-border);
+  border-radius: 18px;
+  background: linear-gradient(180deg, rgba(15, 27, 46, 0.82), rgba(7, 17, 31, 0.62));
+  box-shadow: 0 8px 22px var(--shadow), inset 0 1px 0 rgba(255, 255, 255, 0.12);
 }
 
 .eyebrow {
   margin: 0;
-  font-size: 13px;
+  font-size: 12px;
   line-height: 1;
   color: var(--muted);
-  font-weight: 800;
+  font-weight: 850;
+  letter-spacing: 0.7px;
+  text-transform: uppercase;
 }
 
 h1 {
-  margin: 1px 0 0;
-  font-size: 28px;
+  margin: 2px 0 1px;
+  font-size: 27px;
   line-height: 1;
   font-weight: 950;
   letter-spacing: -0.8px;
+  text-shadow: 0 0 14px rgba(125, 211, 252, 0.28);
 }
 
 #rangeLabel,
@@ -112,14 +124,19 @@ h1 {
   grid-template-columns: 1fr 1.6fr 1fr;
   gap: 7px;
   flex: 0 0 auto;
+  padding: 4px;
+  border-radius: 16px;
+  background: rgba(2, 6, 23, 0.42);
+  border: 1px solid var(--soft-border);
 }
 
 button {
   border: 2px solid var(--border);
   border-radius: 13px;
-  background: rgba(12, 18, 32, 0.96);
+  background: linear-gradient(180deg, rgba(15, 27, 46, 0.96), rgba(7, 17, 31, 0.96));
   color: var(--text);
   font-weight: 900;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12);
   -webkit-tap-highlight-color: transparent;
 }
 
@@ -151,6 +168,11 @@ button {
   gap: 5px;
   height: 245px;
   flex: 0 0 245px;
+  padding: 6px;
+  border: 1px solid var(--soft-border);
+  border-radius: 20px;
+  background: rgba(2, 6, 23, 0.42);
+  box-shadow: 0 10px 24px var(--shadow), inset 0 0 18px rgba(125, 211, 252, 0.05);
 }
 
 .day {
@@ -159,10 +181,11 @@ button {
   height: 45px;
   min-height: 45px;
 
-  border: 2px solid rgba(255, 255, 255, 0.3);
-  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  border-radius: 13px;
 
-  background: rgba(12, 18, 32, 0.96);
+  background:
+    linear-gradient(180deg, rgba(15, 27, 46, 0.98), rgba(7, 17, 31, 0.98));
   color: var(--text);
 
   font-size: 21px;
@@ -173,6 +196,10 @@ button {
   align-items: center;
   justify-content: center;
 
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.11),
+    0 3px 8px rgba(0, 0, 0, 0.28);
+
   transition:
     transform 100ms ease,
     box-shadow 100ms ease,
@@ -181,15 +208,18 @@ button {
 }
 
 .day.outside {
-  opacity: 0.12;
+  opacity: 0.16;
+  filter: grayscale(0.8);
 }
 
 .day.today {
   color: var(--today);
   border-color: var(--today);
+  background:
+    linear-gradient(180deg, rgba(90, 70, 8, 0.65), rgba(7, 17, 31, 0.96));
   box-shadow:
-    0 0 10px var(--today-glow),
-    inset 0 0 8px rgba(255, 214, 10, 0.12);
+    0 0 12px var(--today-glow),
+    inset 0 0 10px rgba(250, 204, 21, 0.16);
 }
 
 .day.has-event::after {
@@ -197,12 +227,12 @@ button {
   position: absolute;
   left: 50%;
   bottom: 4px;
-  width: 8px;
-  height: 8px;
+  width: 20px;
+  height: 4px;
   border-radius: 999px;
   transform: translateX(-50%);
   background: var(--personal);
-  box-shadow: 0 0 9px var(--personal);
+  box-shadow: 0 0 10px var(--personal);
 }
 
 .day.event-work::after {
@@ -232,14 +262,16 @@ button.selected,
 button:focus,
 .day:focus {
   outline: none;
-  transform: scale(1.03);
-  background: var(--focus-bg);
+  transform: scale(1.04);
+  background:
+    radial-gradient(circle at top, rgba(255, 255, 255, 0.58), transparent 40%),
+    linear-gradient(180deg, #7dd3fc, #38bdf8);
   color: var(--focus-text);
   border-color: #ffffff;
   box-shadow:
-    0 0 15px rgba(0, 229, 255, 0.95),
-    0 0 28px rgba(0, 229, 255, 0.5),
-    inset 0 0 10px rgba(255, 255, 255, 0.38);
+    0 0 16px rgba(125, 211, 252, 0.98),
+    0 0 32px rgba(56, 189, 248, 0.55),
+    inset 0 0 10px rgba(255, 255, 255, 0.42);
 }
 
 .day.selected.today {
@@ -252,15 +284,17 @@ button:focus,
   flex: 0 0 102px;
   height: 102px;
 
-  background: rgba(12, 18, 32, 0.98);
-  border: 2px solid rgba(255, 255, 255, 0.32);
-  border-radius: 18px;
+  background:
+    linear-gradient(180deg, rgba(15, 27, 46, 0.92), rgba(7, 17, 31, 0.96));
+  border: 1px solid var(--soft-border);
+  border-radius: 20px;
 
   padding: 8px 10px;
 
   box-shadow:
-    0 0 16px rgba(0, 0, 0, 0.58),
-    inset 0 0 10px rgba(255, 255, 255, 0.05);
+    0 10px 24px var(--shadow),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1),
+    inset 0 0 14px rgba(125, 211, 252, 0.04);
 }
 
 #selectedDateLabel {
@@ -268,6 +302,8 @@ button:focus,
   font-size: 20px;
   line-height: 1;
   font-weight: 950;
+  color: #f8fbff;
+  text-shadow: 0 0 10px rgba(125, 211, 252, 0.2);
 }
 
 #eventLabel {
@@ -309,6 +345,7 @@ button:focus,
   font-size: 21px;
   text-align: left;
   padding: 0 20px;
+  background: linear-gradient(90deg, rgba(15, 27, 46, 0.96), rgba(7, 17, 31, 0.96));
 }
 
 /* ---------- Motion safety ---------- */
