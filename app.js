@@ -14,12 +14,45 @@ const nextBtn = document.getElementById("nextBtn");
 const addBtn = document.getElementById("addBtn");
 const deleteBtn = document.getElementById("deleteBtn");
 
+const plannerSummary = document.createElement("p");
+plannerSummary.id = "plannerSummary";
+plannerSummary.className = "planner-summary";
+
+if (eventLabel?.parentElement && !document.getElementById("plannerSummary")) {
+  eventLabel.insertAdjacentElement("afterend", plannerSummary);
+}
+
 const storageKey = "rayban-calendar-events-v2";
 const appStateKey = "rayban-calendar-ui-state-v1";
 const maxVisibleCells = 35;
 const moveRepeatDelay = 115;
 const selectCooldownDelay = 220;
+const plannerAnimationClass = "planner-flash";
+
 const eventTypes = ["work", "personal", "important", "urgent"];
+
+const eventPresets = {
+  "Work shift": {
+    time: "9:00 AM",
+    note: "Stay sharp and plan the next break."
+  },
+  Gym: {
+    time: "6:00 PM",
+    note: "Training block. Keep it moving."
+  },
+  Appointment: {
+    time: "2:00 PM",
+    note: "Arrive early and bring what you need."
+  },
+  Birthday: {
+    time: "All day",
+    note: "Send a message or make the call."
+  },
+  Reminder: {
+    time: "10:00 AM",
+    note: "Quick task. Handle it before it grows legs."
+  }
+};
 
 const today = new Date();
 today.setHours(0, 0, 0, 0);
@@ -145,6 +178,47 @@ function getPrimaryEventType(date) {
   return events[0]?.type || null;
 }
 
+function getEventEmoji(type) {
+  const emojiMap = {
+    work: "💼",
+    personal: "⭐",
+    important: "📌",
+    urgent: "⚠️"
+  };
+
+  return emojiMap[type] || "•";
+}
+
+function getPlannerSummary(events) {
+  if (events.length === 0) {
+    return "Open day • No scheduled blocks";
+  }
+
+  const workCount = events.filter((event) => event.type === "work").length;
+  const personalCount = events.filter((event) => event.type === "personal").length;
+  const priorityCount = events.filter(
+    (event) => event.type === "important" || event.type === "urgent"
+  ).length;
+
+  const parts = [];
+
+  if (workCount) parts.push(`${workCount} work`);
+  if (personalCount) parts.push(`${personalCount} personal`);
+  if (priorityCount) parts.push(`${priorityCount} priority`);
+
+  return parts.join(" • ");
+}
+
+function flashPlannerDetails() {
+  const details = eventLabel.closest(".details");
+
+  if (!details) return;
+
+  details.classList.remove(plannerAnimationClass);
+  void details.offsetWidth;
+  details.classList.add(plannerAnimationClass);
+}
+
 function render() {
   if (state.renderQueued) return;
 
@@ -225,7 +299,10 @@ function renderCalendarScreen() {
 
     if (events.length > 0) {
       button.classList.add("has-event", `event-${primaryType}`);
-      button.setAttribute("aria-label", `${formatFullDate(date)}, ${events.length} events`);
+      button.setAttribute(
+        "aria-label",
+        `${formatFullDate(date)}, ${events.length} planner items`
+      );
     } else {
       button.setAttribute("aria-label", formatFullDate(date));
     }
@@ -268,20 +345,30 @@ function renderAddScreen() {
 
 function updateDetails() {
   const events = getEventsForDate(state.selectedDate);
+  const dateKey = toDateKey(state.selectedDate);
 
   selectedDateLabel.textContent = formatFullDate(state.selectedDate);
 
   if (events.length === 0) {
-    eventLabel.textContent = "No events";
+    eventLabel.textContent = `No plans • ${dateKey}`;
+    plannerSummary.textContent = "Open planner slot";
+    flashPlannerDetails();
     return;
   }
 
   const first = events[0];
   const extraCount = events.length - 1;
+  const emoji = getEventEmoji(first.type);
+  const time = first.time || "Anytime";
+  const note = first.note ? ` • ${first.note}` : "";
+
   eventLabel.textContent =
     extraCount > 0
-      ? `${first.label}: ${first.title} +${extraCount} more`
-      : `${first.label}: ${first.title}`;
+      ? `${emoji} ${time} • ${first.title} +${extraCount}`
+      : `${emoji} ${time} • ${first.title}`;
+
+  plannerSummary.textContent = `${getPlannerSummary(events)}${note}`;
+  flashPlannerDetails();
 }
 
 function clearSelectedClasses() {
@@ -370,14 +457,25 @@ function addPresetEvent(title, type) {
     state.events[key] = [];
   }
 
+  const preset = eventPresets[title] || {
+    time: "Anytime",
+    note: "Planner item"
+  };
+
+  const normalizedType = eventTypes.includes(type) ? type : "personal";
+
   state.events[key].push({
     id: `${Date.now()}-${Math.random().toString(16).slice(2)}`,
     title,
-    type: eventTypes.includes(type) ? type : "personal",
-    label: type[0].toUpperCase() + type.slice(1)
+    type: normalizedType,
+    label: normalizedType[0].toUpperCase() + normalizedType.slice(1),
+    time: preset.time,
+    note: preset.note,
+    completed: false
   });
 
   saveEvents();
+  flashPlannerDetails();
   closeAddScreen();
 }
 
@@ -394,6 +492,7 @@ function deleteLatestEvent() {
   }
 
   saveEvents();
+  flashPlannerDetails();
   render();
 }
 
@@ -403,6 +502,8 @@ function selectCurrent() {
   if (state.screen === "add") {
     const presetButtons = Array.from(document.querySelectorAll(".preset-btn"));
     const selected = presetButtons[state.addIndex];
+
+    if (!selected) return;
 
     addPresetEvent(selected.dataset.title, selected.dataset.type);
     return;
@@ -467,7 +568,11 @@ function moveGrid(direction) {
   }
 
   const cells = getMonthCells(state.visibleYear, state.visibleMonth).slice(0, maxVisibleCells);
-  state.selectedDate = new Date(cells[state.selectedCellIndex]);
+  const date = cells[state.selectedCellIndex];
+
+  if (!date) return;
+
+  state.selectedDate = new Date(date);
 
   if (state.selectedDate.getMonth() !== state.visibleMonth) {
     state.visibleYear = state.selectedDate.getFullYear();
@@ -475,7 +580,7 @@ function moveGrid(direction) {
 
     state.selectedCellIndex = getMonthCells(state.visibleYear, state.visibleMonth)
       .slice(0, maxVisibleCells)
-      .findIndex((date) => isSameDay(date, state.selectedDate));
+      .findIndex((cellDate) => isSameDay(cellDate, state.selectedDate));
 
     if (state.selectedCellIndex < 0) {
       state.selectedCellIndex = 0;
