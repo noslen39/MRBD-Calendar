@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=600, height=600, initial-scale=1" />
+  <title>10-Year Calendar</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <main class="screen">
+    <section id="calendarScreen" class="app-screen active">
+      <header class="top">
+        <p class="eyebrow">Ray-Ban Display</p>
+        <h1 id="monthTitle">Calendar</h1>
+        <p id="rangeLabel">10-year planner</p>
+      </header>
+
+      <section class="toolbar">
+        <button class="focusable nav-btn" id="prevBtn">‹</button>
+        <button class="focusable nav-btn" id="todayBtn">Today</button>
+        <button class="focusable nav-btn" id="nextBtn">›</button>
+      </section>
+
+      <section class="weekdays">
+        <span>Sun</span>
+        <span>Mon</span>
+        <span>Tue</span>
+        <span>Wed</span>
+        <span>Thu</span>
+        <span>Fri</span>
+        <span>Sat</span>
+      </section>
+
+      <section id="calendarGrid" class="calendar-grid" aria-label="Calendar month"></section>
+
+      <section class="details">
+        <p id="selectedDateLabel">Select a day</p>
+        <p id="eventLabel">No events</p>
+
+        <div class="actions">
+          <button class="focusable action-btn" id="addBtn">Add</button>
+          <button class="focusable action-btn" id="deleteBtn">Delete</button>
+        </div>
+      </section>
+
+      <p class="hint">Arrows move · Enter select</p>
+    </section>
+
+    <section id="addScreen" class="app-screen">
+      <header class="top">
+        <p class="eyebrow">New Event</p>
+        <h1 id="addDateTitle">Add</h1>
+        <p class="muted">Choose a preset</p>
+      </header>
+
+      <section id="presetList" class="preset-list">
+        <button class="focusable preset-btn" data-title="Work shift" data-type="work">Work shift</button>
+        <button class="focusable preset-btn" data-title="Gym" data-type="personal">Gym</button>
+        <button class="focusable preset-btn" data-title="Appointment" data-type="important">Appointment</button>
+        <button class="focusable preset-btn" data-title="Birthday" data-type="personal">Birthday</button>
+        <button class="focusable preset-btn" data-title="Reminder" data-type="urgent">Reminder</button>
+        <button class="focusable preset-btn" data-title="Cancel" data-type="cancel">Cancel</button>
+      </section>
+
+      <p class="hint">Up/down choose · Enter add</p>
+    </section>
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>

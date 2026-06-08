@@ -1,0 +1,244 @@
+* {
+  box-sizing: border-box;
+}
+
+:root {
+  --bg: #050505;
+  --panel: #10131a;
+  --panel-soft: #171b24;
+  --text: #ffffff;
+  --muted: #b8c0cc;
+
+  --focus: #ffffff;
+  --today: #ffcc00;
+
+  --work: #3b82f6;
+  --personal: #22c55e;
+  --important: #f97316;
+  --urgent: #ef4444;
+}
+
+body {
+  margin: 0;
+  width: 600px;
+  height: 600px;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at top, rgba(0, 212, 255, 0.15), transparent 30%),
+    radial-gradient(circle at bottom, rgba(255, 204, 0, 0.1), transparent 36%),
+    var(--bg);
+  color: var(--text);
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+.screen {
+  width: 600px;
+  height: 600px;
+  overflow: hidden;
+}
+
+.app-screen {
+  display: none;
+  width: 600px;
+  height: 600px;
+  padding: 18px;
+}
+
+.app-screen.active {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.top {
+  text-align: center;
+}
+
+.eyebrow {
+  margin: 0;
+  font-size: 15px;
+  color: var(--muted);
+}
+
+h1 {
+  margin: 2px 0;
+  font-size: 34px;
+  line-height: 1;
+}
+
+#rangeLabel,
+.muted {
+  margin: 0;
+  font-size: 16px;
+  color: var(--muted);
+}
+
+.toolbar {
+  display: grid;
+  grid-template-columns: 1fr 2fr 1fr;
+  gap: 8px;
+}
+
+button {
+  border: 3px solid var(--text);
+  border-radius: 14px;
+  background: var(--panel);
+  color: var(--text);
+  font-weight: 800;
+}
+
+.nav-btn {
+  height: 42px;
+  font-size: 24px;
+}
+
+.weekdays {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 6px;
+  color: var(--muted);
+  font-size: 14px;
+  text-align: center;
+}
+
+.calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 6px;
+  flex: 1;
+  min-height: 280px;
+}
+
+.day {
+  position: relative;
+  border: 2px solid rgba(255, 255, 255, 0.22);
+  border-radius: 14px;
+  background: rgba(16, 19, 26, 0.9);
+  color: var(--text);
+  font-size: 19px;
+  font-weight: 800;
+  min-height: 44px;
+  transition:
+    transform 140ms ease,
+    box-shadow 140ms ease,
+    background 140ms ease,
+    border-color 140ms ease;
+}
+
+.day.outside {
+  opacity: 0.28;
+}
+
+.day.today {
+  border-color: var(--today);
+  box-shadow: 0 0 14px rgba(255, 204, 0, 0.5);
+}
+
+.day.has-event::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: 7px;
+  width: 9px;
+  height: 9px;
+  border-radius: 999px;
+  transform: translateX(-50%);
+  background: var(--personal);
+  box-shadow: 0 0 10px var(--personal);
+}
+
+.day.event-work::after {
+  background: var(--work);
+  box-shadow: 0 0 10px var(--work);
+}
+
+.day.event-personal::after {
+  background: var(--personal);
+  box-shadow: 0 0 10px var(--personal);
+}
+
+.day.event-important::after {
+  background: var(--important);
+  box-shadow: 0 0 10px var(--important);
+}
+
+.day.event-urgent::after {
+  background: var(--urgent);
+  box-shadow: 0 0 10px var(--urgent);
+}
+
+.day.selected,
+button.selected,
+button:focus,
+.day:focus {
+  outline: none;
+  transform: scale(1.08);
+  background: var(--focus);
+  color: #000000;
+  border-color: var(--focus);
+  box-shadow:
+    0 0 18px rgba(255, 255, 255, 0.75),
+    inset 0 0 10px rgba(0, 0, 0, 0.25);
+}
+
+.details {
+  background: rgba(16, 19, 26, 0.88);
+  border: 2px solid rgba(255, 255, 255, 0.18);
+  border-radius: 18px;
+  padding: 10px;
+}
+
+#selectedDateLabel {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 800;
+}
+
+#eventLabel {
+  margin: 3px 0 8px;
+  min-height: 20px;
+  font-size: 16px;
+  color: var(--muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.action-btn {
+  height: 38px;
+  font-size: 18px;
+}
+
+.preset-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.preset-btn {
+  height: 62px;
+  font-size: 24px;
+  text-align: left;
+  padding: 0 22px;
+}
+
+.hint {
+  margin: 0;
+  text-align: center;
+  color: var(--muted);
+  font-size: 14px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .day,
+  button {
+    transition: none;
+  }
+}
